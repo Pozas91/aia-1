@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 
+# Importaciones de librerías requeridas
 import re
 
+# Variables globales
 path = "data/corpus.txt"
 letters = {}
 words = {}
@@ -19,6 +21,8 @@ encodingDictionary = {
     '8': ['w', 'x', 'y', 'z']
 }
 
+
+# Método utilizado para realizar el conteo de las letras
 def encoding(word):
   res = ''
     
@@ -30,12 +34,15 @@ def encoding(word):
             
   return res
 
+# Método utilizado para aplicar estadística a los distintos items, es decir,
+# este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
 def applyStatistics(items, total):
   for item in items:
     items[item][0] = items[item][0] / totalWords
 
 
-# Programm execution
+# En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
+# Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas.
 with open(path, "r", encoding="utf8") as file:
 
   for line in file.readlines():
@@ -63,3 +70,61 @@ with open(path, "r", encoding="utf8") as file:
         
 applyStatistics(words, totalWords)
 applyStatistics(letters, totalLetters)
+
+
+# Método unigram_letras usado para proporcionar predicciones de letras 
+# en base a una cadena de números separados por espacio
+def unigram_letras(texto):
+    res = ''
+    
+    for num in texto.split(' '):
+        
+        max_prob = 0
+        letter_max_prob = ''
+        
+        for key, value in letters.items():
+            
+            # Compruebo si el número que estamos recorriendo es igual al encontrado en el diccionario
+            # de ser así entonces compruebo también que la probabilidad sea más alta que la anterior.
+            # Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
+            if value[1] == num and value[0] > max_prob:
+                max_prob = value[0]
+                letter_max_prob = key
+
+        # Almaceno la letra más probable en la variable res
+        res += letter_max_prob
+    
+    return res
+    
+
+# Llamamos al método unigram_letras pasandole como números la palabra HOLA    
+print(unigram_letras('3 5 4 1'));
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
