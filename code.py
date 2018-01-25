@@ -9,10 +9,10 @@ from tkinter import *
 path = "data/corpus.txt"
 letters = {}
 words = {}
-totalWords = 0
-totalLetters = 0
+total_words = 0
+total_letters = 0
 
-encodingDictionary = {
+encoding_dictionary = {
     '1': ['a', 'á', 'b', 'c'],
     '2': ['d', 'e', 'é', 'f'],
     '3': ['g', 'h', 'i', 'í'],
@@ -26,24 +26,43 @@ encodingDictionary = {
 # Variable usada para medir los tiempos de ejecución
 start_time = time.time()
 
-
 # Método utilizado para realizar el conteo de las letras
 def encoding(word):
   res = ''
     
   for letter in list(word):
-    for key in encodingDictionary:
-      if letter in encodingDictionary.get(key):
+    if letter == ' ':
+      res += letter
+      continue
+    
+    for key in encoding_dictionary:
+      if letter in encoding_dictionary.get(key):
         res += key
         break
             
   return res
 
+# Método utilizado para calcular la distancia entre dos palabras codificadas.
+# es utilizado para dar una palabra favorable en caso de no encontrar la
+# original en el diccionario.
+def manhattan_distance(a, b):
+  distance = 0
+  
+  if len(a) > len(b):
+    a, b = b, a
+  
+  for i, x in enumerate(a):
+    if a[i] != b[i]:
+      distance += 1
+
+  distance += (len(b) - len(a))
+  return distance
+
 # Método utilizado para aplicar estadística a los distintos items, es decir,
 # este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
-def applyStatistics(items, total):
+def apply_statistics(items, total):
   for item in items:
-    items[item][0] = items[item][0] / totalWords
+    items[item][0] = items[item][0] / total_words
 
 
 # En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
@@ -62,7 +81,7 @@ with open(path, "r", encoding="utf8") as file:
       else:
         words[word] = [1, encoding(word)]
           
-      totalWords += 1
+      total_words += 1
           
       for letter in list(word):
           
@@ -71,11 +90,24 @@ with open(path, "r", encoding="utf8") as file:
         else:
           letters[letter] = [1, encoding(letter)]
               
-        totalLetters += 1
+        total_letters += 1
         
-applyStatistics(words, totalWords)
-applyStatistics(letters, totalLetters)
+apply_statistics(words, total_words)
+apply_statistics(letters, total_letters)
 
+# Método para obtener una palabra similar a una dada, en caso de que no se
+# en el diccionario
+def similar_word(word):
+  res = ''
+  min_distance = sys.maxsize
+  
+  for key, value in words.items():
+    distance = manhattan_distance(word, value[1])
+    if distance < min_distance:
+      res = key
+      min_distance = distance
+  
+  return res
 
 # Método unigram_letras usado para proporcionar predicciones de letras 
 # en base a una cadena de números separados por espacio
@@ -121,8 +153,11 @@ def unigram_palabras(texto):
                 max_prob = value[0]
                 word_max_prob = key
 
-        # Almaceno la letra más probable en la variable res
-        res += word_max_prob + ' '
+        if word_max_prob == '':
+          res += similar_word(numBlock) + ' '
+        else:
+          # Almaceno la letra más probable en la variable res
+          res += word_max_prob + ' '
     
     return res
 
@@ -138,41 +173,49 @@ print("Tiempo de ejecución en segundos: --- %s seconds ---" % (time.time() - st
 
 # Interfaz gráfica
 def show_unigram_letras():
-    e3.delete(0,END)
+  
+    e3.delete(0, END)
+    e2.delete(0, END)
+    
+    e2.insert(10, encoding(e1.get()))
     res = unigram_letras(e2.get())
     #print("Entrada: %s\n" % res)
-    e3.insert(10,res)
+    e3.insert(10, res)
    
 def show_unigram_palabras():
-    e3.delete(0,END)
+  
+    e3.delete(0, END)
+    e2.delete(0, END)
+    
+    e2.insert(10, encoding(e1.get()))
     res = unigram_palabras(e2.get())
     #print("Entrada: %s\n" % res)
-    e3.insert(10,res)
+    e3.insert(10, res)
 
 master = Tk()
 master.title("Texto predictivo")
-master.minsize(width=350, height=150)
+master.minsize(width = 350, height = 150)
 
-Label(master, text="Text").grid(row=0)
-Label(master, text="Entrada").grid(row=1)
-Label(master, text="Predicción").grid(row=3)
+Label(master, text="Text").grid(row = 0)
+Label(master, text="Entrada").grid(row = 1)
+Label(master, text="Predicción").grid(row = 3)
 
 e1 = Entry(master)
 e2 = Entry(master)
 e3 = Entry(master)
 
-e1.insert(10,"soy bueno") 
-e2.insert(10,"658 18255") #El bloque de números equivale a "Soy bueno"
-e3.insert(10,"")
+e1.insert(10, "soy bueno") 
+e2.insert(10, "658 18255") #El bloque de números equivale a "Soy bueno"
+e3.insert(10, "")
 
-e1.grid(row=0, column=1)
-e2.grid(row=1, column=1)
-e3.grid(row=3, column=1)
+e1.grid(row = 0, column = 1)
+e2.grid(row = 1, column = 1)
+e3.grid(row = 3, column = 1)
 
-Button(master, text='Unigram letras', command=show_unigram_letras).grid(row=6, column=0, sticky=W, pady=10)
-Button(master, text='Unigram palabras', command=show_unigram_palabras).grid(row=6, column=1, sticky=W, pady=10)  
+Button(master, text='Unigram letras', command = show_unigram_letras).grid(row = 6, column = 0, sticky = W, pady = 10)
+Button(master, text='Unigram palabras', command = show_unigram_palabras).grid(row = 6, column = 1, sticky = W, pady = 10)  
 
-mainloop()
+master.mainloop()
 
     
     
