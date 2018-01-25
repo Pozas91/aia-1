@@ -3,6 +3,7 @@
 # Importaciones de librerías requeridas
 import re
 import time
+from tkinter import *
 
 # Variables globales
 path = "data/corpus.txt"
@@ -126,6 +127,7 @@ def unigram_palabras(texto):
     return res
 
 # TESTING  
+print("************************** TESTING ******************************")
 print("Texto: Hola -> Predicción: " + unigram_letras('3 5 4 1'));
 print("Texto: Hola -> Predicción: " + unigram_palabras('3541'));
 print("Texto: Hola que tal estas -> Predicción: " + unigram_palabras('3541 672 714 26716'));
@@ -133,9 +135,45 @@ print("Texto: Tengo mucho miedo -> Predicción: " + unigram_palabras('72535 5713
 
 # Tiempo de ejecución obtenido
 print("Tiempo de ejecución en segundos: --- %s seconds ---" % (time.time() - start_time))
-    
-    
-    
+
+# Interfaz gráfica
+def show_unigram_letras():
+    e3.delete(0,END)
+    res = unigram_letras(e2.get())
+    print("Entrada: %s\n" % res)
+    e3.insert(10,res)
+   
+def show_unigram_palabras():
+    e3.delete(0,END)
+    res = unigram_palabras(e2.get())
+    print("Entrada: %s\n" % res)
+    e3.insert(10,res)
+
+master = Tk()
+master.title("Texto predictivo")
+master.minsize(width=350, height=150)
+
+Label(master, text="Text").grid(row=0)
+Label(master, text="Entrada").grid(row=1)
+Label(master, text="Predicción").grid(row=3)
+
+e1 = Entry(master)
+e2 = Entry(master)
+e3 = Entry(master)
+
+e1.insert(10,"soy bueno") 
+e2.insert(10,"658 18255") #El bloque de números equivale a "Soy bueno"
+e3.insert(10,"")
+
+e1.grid(row=0, column=1)
+e2.grid(row=1, column=1)
+e3.grid(row=3, column=1)
+
+Button(master, text='Unigram letras', command=show_unigram_letras).grid(row=6, column=0, sticky=W, pady=10)
+Button(master, text='Unigram palabras', command=show_unigram_palabras).grid(row=6, column=1, sticky=W, pady=10)  
+
+mainloop()
+
     
     
     
