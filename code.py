@@ -2,6 +2,7 @@
 
 # Importaciones de librerías requeridas
 import re
+import time
 
 # Variables globales
 path = "data/corpus.txt"
@@ -20,6 +21,9 @@ encodingDictionary = {
     '7': ['t', 'u', 'ú', 'v'],
     '8': ['w', 'x', 'y', 'z']
 }
+
+# Variable usada para medir los tiempos de ejecución
+start_time = time.time()
 
 
 # Método utilizado para realizar el conteo de las letras
@@ -92,13 +96,43 @@ def unigram_letras(texto):
                 letter_max_prob = key
 
         # Almaceno la letra más probable en la variable res
-        res += letter_max_prob
+        res += letter_max_prob + ' '
     
     return res
-    
 
-# Llamamos al método unigram_letras pasandole como números la palabra HOLA    
-print(unigram_letras('3 5 4 1'));
+
+# Método unigram_palabras usado para proporcionar predicciones de palabras 
+# en base a una cadena de números separados por espacio
+def unigram_palabras(texto):
+    res = ''
+    
+    for numBlock in texto.split(' '):
+        
+        max_prob = 0
+        word_max_prob = ''
+        
+        for key, value in words.items():
+            
+            # Compruebo si el número que estamos recorriendo es igual al encontrado en el diccionario
+            # de ser así entonces compruebo también que la probabilidad sea más alta que la anterior.
+            # Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
+            if value[1] == numBlock and value[0] > max_prob:
+                max_prob = value[0]
+                word_max_prob = key
+
+        # Almaceno la letra más probable en la variable res
+        res += word_max_prob + ' '
+    
+    return res
+
+# TESTING  
+print("Texto: Hola -> Predicción: " + unigram_letras('3 5 4 1'));
+print("Texto: Hola -> Predicción: " + unigram_palabras('3541'));
+print("Texto: Hola que tal estas -> Predicción: " + unigram_palabras('3541 672 714 26716'));
+print("Texto: Tengo mucho miedo -> Predicción: " + unigram_palabras('72535 57135 53225'));
+
+# Tiempo de ejecución obtenido
+print("Tiempo de ejecución en segundos: --- %s seconds ---" % (time.time() - start_time))
     
     
     
