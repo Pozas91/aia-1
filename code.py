@@ -140,13 +140,13 @@ print("Tiempo de ejecución en segundos: --- %s seconds ---" % (time.time() - st
 def show_unigram_letras():
     e3.delete(0,END)
     res = unigram_letras(e2.get())
-    print("Entrada: %s\n" % res)
+    #print("Entrada: %s\n" % res)
     e3.insert(10,res)
    
 def show_unigram_palabras():
     e3.delete(0,END)
     res = unigram_palabras(e2.get())
-    print("Entrada: %s\n" % res)
+    #print("Entrada: %s\n" % res)
     e3.insert(10,res)
 
 master = Tk()
