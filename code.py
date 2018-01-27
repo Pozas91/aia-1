@@ -99,6 +99,7 @@ with open(path, "r", encoding="utf8") as file:
 apply_statistics(words, total_words)
 apply_statistics(letters, total_letters)
 
+
 #En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
 #Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas para obtener así el bigram.
 with open(path, "r", encoding="utf8") as file2:
@@ -121,10 +122,19 @@ with open(path, "r", encoding="utf8") as file2:
     # Total de par de palabras/letras existentes
     total_words_pair = len(words_pair)
     
+    # New dictionary for cleaning the process's output
+    clean_dictionary = dict()
+    
     # Añado la probabilidad correspondiente a cada par de palabras
     for k in words_pair:
-        words_pair[k] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
-    #print(words_pair)  
+      
+        if k[0] not in clean_dictionary:
+            clean_dictionary[k[0]] = dict()
+          
+        clean_dictionary[k[0]][k[1]] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
+        # words_pair[k] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
+        
+    words_pair = clean_dictionary
       
 # Método para obtener una palabra similar a una dada, en caso de que no se
 # en el diccionario
@@ -162,7 +172,8 @@ def unigram_letras(texto):
         # Almaceno la letra más probable en la variable res
         res += letter_max_prob + ' '
     
-    return res
+    # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
+    return res.strip()
 
 
 # Método unigram_palabras usado para proporcionar predicciones de palabras 
@@ -190,7 +201,56 @@ def unigram_palabras(texto):
           # Almaceno la letra más probable en la variable res
           res += word_max_prob + ' '
     
-    return res
+    # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
+    return res.strip()
+
+"""
+Método bigram_words_base usado para proporcionar predicciones de palabras
+en base a una cadena de números separadas por espacio teniendo en cuenta la
+palabra anterior predicha.
+"""
+def bigram_words_base(last_word, current_word):
+  max_prob_word = ''
+  max_prob = 0
+  
+  if last_word not in words_pair:
+    return similar_word(current_word)
+  
+  for key in words_pair[last_word]:
+    
+    if words_pair[last_word][key][2] == current_word and words_pair[last_word][key][0] > max_prob:
+      max_prob = words_pair[last_word][key][0]
+      max_prob_word = key
+      
+  if max_prob_word == '':
+    max_prob_word = similar_word(current_word)
+  
+  # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
+  return max_prob_word.strip()
+
+"""
+Método de invocación inicial del método bigram_words, usado para predeccir
+la primera palabra, ya que esta no tiene una referencia anterior.
+"""
+def bigram_words(texto):
+  res = ''
+  last_word = ''
+  
+  for index, numBlock in enumerate(texto.split(' ')):
+    if index == 0:
+      word = unigram_palabras(numBlock)
+      res += word
+      last_word = word
+    else:
+      word = bigram_words_base(last_word, numBlock)
+      res += word
+      last_word = word
+      
+    
+    res += ' '
+
+  # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
+  return res.strip()
 
 # TESTING  
 print("************************** TESTING ******************************")
@@ -222,6 +282,19 @@ def show_unigram_palabras():
     res = unigram_palabras(e2.get())
     #print("Entrada: %s\n" % res)
     e3.insert(10, res)
+    
+def show_bigram_words():
+  
+  e3.delete(0, END)
+  e2.delete(0, END)
+  
+  e2.insert(10, encoding(e1.get()))
+  res = bigram_words(e2.get())
+  #print("Entrada: %s\n" % res)
+  e3.insert(10, res)
+  
+def show_bigram_letters():
+  e3.insert(10, 'Yo me llamo Ralph')
 
 master = Tk()
 master.title("Texto predictivo")
@@ -245,6 +318,8 @@ e3.grid(row = 3, column = 1)
 
 Button(master, text='Unigram letras', command = show_unigram_letras).grid(row = 6, column = 0, sticky = W, pady = 10)
 Button(master, text='Unigram palabras', command = show_unigram_palabras).grid(row = 6, column = 1, sticky = W, pady = 10)  
+Button(master, text='Bigram letras', command = show_bigram_letters).grid(row = 7, column = 0, sticky = W, pady = 10)  
+Button(master, text='Bigram palabras', command = show_bigram_words).grid(row = 7, column = 1, sticky = W, pady = 10)  
 
 master.mainloop()
 
