@@ -4,11 +4,15 @@
 import re
 import time
 from tkinter import *
+from collections import Counter
+from functools import reduce
 
 # Variables globales
 path = "data/corpus.txt"
+pathTesting = "data/corpus2.txt"
 letters = {}
 words = {}
+words_pair = {}
 total_words = 0
 total_letters = 0
 
@@ -92,9 +96,37 @@ with open(path, "r", encoding="utf8") as file:
               
         total_letters += 1
         
+#Método que aplica estadística a todos los items        
 apply_statistics(words, total_words)
 apply_statistics(letters, total_letters)
 
+#En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
+#Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas para obtener así el bigram.
+with open(pathTesting, "r", encoding="utf8") as file2:
+    
+    corpus = ''
+    for line in file2.readlines():
+      
+        line = re.sub('[^A-Za-z\u00C0-\u017F]+', ' ', line)
+        line = re.sub('[\s]+', ' ', line)
+        corpus += line
+        
+    # Genero una lista donde añado el par de palabras
+    line_list = list()
+    line_list.append(corpus)
+        
+    # Genero el par de palabras (bigram) con listas de compresión
+    bigrams = [b for l in line_list for b in zip(l.lower().split(" ")[:-1], l.lower().split(" ")[1:])]
+    words_pair = Counter(bigrams)
+    
+    # Total de par de palabras existentes
+    total_words_pair = len(words_pair)
+    
+    # Añado la probabilidad correspondiente a cada par de palabras
+    for k in words_pair:
+        words_pair[k] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
+    #print(words_pair)
+            
 # Método para obtener una palabra similar a una dada, en caso de que no se
 # en el diccionario
 def similar_word(word):
@@ -205,7 +237,7 @@ e2 = Entry(master)
 e3 = Entry(master)
 
 e1.insert(10, "soy bueno") 
-e2.insert(10, "658 18255") #El bloque de números equivale a "Soy bueno"
+e2.insert(10, "658 17255") #El bloque de números equivale a "Soy bueno"
 e3.insert(10, "")
 
 e1.grid(row = 0, column = 1)
