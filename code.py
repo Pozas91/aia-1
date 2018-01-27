@@ -5,12 +5,11 @@ import re
 import time
 from tkinter import *
 from collections import Counter
-from functools import reduce
 
 # Variables globales
 path = "data/corpus.txt"
-pathTesting = "data/corpus2.txt"
 letters = {}
+letters_pair = {}
 words = {}
 words_pair = {}
 total_words = 0
@@ -102,7 +101,7 @@ apply_statistics(letters, total_letters)
 
 #En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
 #Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas para obtener así el bigram.
-with open(pathTesting, "r", encoding="utf8") as file2:
+with open(path, "r", encoding="utf8") as file2:
     
     corpus = ''
     for line in file2.readlines():
@@ -119,14 +118,14 @@ with open(pathTesting, "r", encoding="utf8") as file2:
     bigrams = [b for l in line_list for b in zip(l.lower().split(" ")[:-1], l.lower().split(" ")[1:])]
     words_pair = Counter(bigrams)
     
-    # Total de par de palabras existentes
+    # Total de par de palabras/letras existentes
     total_words_pair = len(words_pair)
     
     # Añado la probabilidad correspondiente a cada par de palabras
     for k in words_pair:
         words_pair[k] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
-    #print(words_pair)
-            
+    #print(words_pair)  
+      
 # Método para obtener una palabra similar a una dada, en caso de que no se
 # en el diccionario
 def similar_word(word):
