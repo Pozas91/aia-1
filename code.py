@@ -64,11 +64,20 @@ def manhattan_distance(a, b):
   distance += (len(b) - len(a))
   return distance
 
-# Método utilizado para aplicar estadística a los distintos items, es decir,
-# este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
+"""
+Método utilizado para aplicar estadística a los distintos items, es decir,
+este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
+"""
 def apply_statistics(items, total):
   for item in items:
     items[item][0] = items[item][0] / total_words
+
+"""
+Método utilizado para dividir el texto en n letras separadas.
+Ejemplo: hola -> h o l a
+"""    
+def wrap(s, w):
+    return textwrap.fill(s, w)
 
 """
 En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
@@ -164,13 +173,6 @@ with open(path, "r", encoding="utf8") as file2:
     #Actualizo las variables correspondientes a los diccionarios de letras y palabras después de la limpieza
     words_pair = clean_dictionary
     letters_pair = clean_dictionary_letters
-
-"""
-Método utilizado para dividir el texto en n letras separadas.
-Ejemplo: hola -> h o l a
-"""    
-def wrap(s, w):
-    return textwrap.fill(s, w)
 
 """      
 Método para obtener una palabra similar a una dada, en caso de que no se
