@@ -172,7 +172,6 @@ Ejemplo: hola -> h o l a
 def wrap(s, w):
     return textwrap.fill(s, w)
 
-
 """      
 Método para obtener una palabra similar a una dada, en caso de que no se
 en el diccionario
@@ -188,6 +187,7 @@ def similar_word(word):
       min_distance = distance
   
   return res
+
 """
 Método unigram_letras usado para proporcionar predicciones de letras 
 en base a una cadena de números separados por espacio
