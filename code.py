@@ -5,6 +5,7 @@ import re
 import time
 from tkinter import *
 from collections import Counter
+import textwrap
 
 # Variables globales
 path = "data/corpus.txt"
@@ -45,9 +46,11 @@ def encoding(word):
             
   return res
 
-# Método utilizado para calcular la distancia entre dos palabras codificadas.
-# es utilizado para dar una palabra favorable en caso de no encontrar la
-# original en el diccionario.
+"""
+Método utilizado para calcular la distancia entre dos palabras codificadas.
+es utilizado para dar una palabra favorable en caso de no encontrar la
+original en el diccionario.
+"""
 def manhattan_distance(a, b):
   distance = 0
   
@@ -61,15 +64,25 @@ def manhattan_distance(a, b):
   distance += (len(b) - len(a))
   return distance
 
-# Método utilizado para aplicar estadística a los distintos items, es decir,
-# este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
+"""
+Método utilizado para aplicar estadística a los distintos items, es decir,
+este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
+"""
 def apply_statistics(items, total):
   for item in items:
     items[item][0] = items[item][0] / total_words
 
+"""
+Método utilizado para dividir el texto en n letras separadas.
+Ejemplo: hola -> h o l a
+"""    
+def wrap(s, w):
+    return textwrap.fill(s, w)
 
-# En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
-# Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas.
+"""
+En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
+Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas.
+"""
 with open(path, "r", encoding="utf8") as file:
 
   for line in file.readlines():
@@ -100,8 +113,10 @@ apply_statistics(words, total_words)
 apply_statistics(letters, total_letters)
 
 
-#En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
-#Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas para obtener así el bigram.
+"""
+En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
+Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas para obtener así el bigram.
+"""
 with open(path, "r", encoding="utf8") as file2:
     
     corpus = ''
@@ -110,20 +125,33 @@ with open(path, "r", encoding="utf8") as file2:
         line = re.sub('[^A-Za-z\u00C0-\u017F]+', ' ', line)
         line = re.sub('[\s]+', ' ', line)
         corpus += line
-        
+    
+    #Pongo todo el corpus en minúsculas
+    corpus = corpus.lower()
+    
     # Genero una lista donde añado el par de palabras
     line_list = list()
     line_list.append(corpus)
+    
+    # Genero una lista donde añado el par de letras
+    line_letters_list = list()
+    line_letters_list.append(wrap(corpus, 1))
         
     # Genero el par de palabras (bigram) con listas de compresión
-    bigrams = [b for l in line_list for b in zip(l.lower().split(" ")[:-1], l.lower().split(" ")[1:])]
+    bigrams = [b for l in line_list for b in zip(l.split(" ")[:-1], l.split(" ")[1:])]
     words_pair = Counter(bigrams)
+    
+     # Genero el par de letras (bigram) con listas de compresión
+    bigrams_letters = [b for l in line_letters_list for b in zip(l.split("\n")[:-1], l.split("\n")[1:])]
+    letters_pair = Counter(bigrams_letters)
     
     # Total de par de palabras/letras existentes
     total_words_pair = len(words_pair)
+    total_letters_pair = len(letters_pair)
     
-    # New dictionary for cleaning the process's output
+    # Nuevo diccionario para limpiar el proceso de salida (palabras/letras)
     clean_dictionary = dict()
+    clean_dictionary_letters = dict()
     
     # Añado la probabilidad correspondiente a cada par de palabras
     for k in words_pair:
@@ -134,10 +162,22 @@ with open(path, "r", encoding="utf8") as file2:
         clean_dictionary[k[0]][k[1]] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
         # words_pair[k] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
         
-    words_pair = clean_dictionary
+    # Añado la probabilidad correspondiente a cada par de letras
+    for k in letters_pair:
       
-# Método para obtener una palabra similar a una dada, en caso de que no se
-# en el diccionario
+        if k[0] not in clean_dictionary_letters:
+            clean_dictionary_letters[k[0]] = dict()
+          
+        clean_dictionary_letters[k[0]][k[1]] = [letters_pair[k] / total_letters_pair, encoding(k[0]), encoding(k[1])]
+        
+    #Actualizo las variables correspondientes a los diccionarios de letras y palabras después de la limpieza
+    words_pair = clean_dictionary
+    letters_pair = clean_dictionary_letters
+
+"""      
+Método para obtener una palabra similar a una dada, en caso de que no se
+en el diccionario
+"""
 def similar_word(word):
   res = ''
   min_distance = sys.maxsize
@@ -150,8 +190,10 @@ def similar_word(word):
   
   return res
 
-# Método unigram_letras usado para proporcionar predicciones de letras 
-# en base a una cadena de números separados por espacio
+"""
+Método unigram_letras usado para proporcionar predicciones de letras 
+en base a una cadena de números separados por espacio
+"""
 def unigram_letras(texto):
     res = ''
     
@@ -175,9 +217,10 @@ def unigram_letras(texto):
     # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
     return res.strip()
 
-
-# Método unigram_palabras usado para proporcionar predicciones de palabras 
-# en base a una cadena de números separados por espacio
+"""
+Método unigram_palabras usado para proporcionar predicciones de palabras 
+en base a una cadena de números separados por espacio
+"""
 def unigram_palabras(texto):
     res = ''
     
@@ -187,10 +230,11 @@ def unigram_palabras(texto):
         word_max_prob = ''
         
         for key, value in words.items():
-            
-            # Compruebo si el número que estamos recorriendo es igual al encontrado en el diccionario
-            # de ser así entonces compruebo también que la probabilidad sea más alta que la anterior.
-            # Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
+            """
+            Compruebo si el número que estamos recorriendo es igual al encontrado en el diccionario
+            de ser así entonces compruebo también que la probabilidad sea más alta que la anterior.
+            Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
+            """
             if value[1] == numBlock and value[0] > max_prob:
                 max_prob = value[0]
                 word_max_prob = key
