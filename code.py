@@ -7,6 +7,7 @@ import tkinter as tk
 import sys
 import textwrap
 
+from random import randint
 from tkinter import *
 from collections import Counter
 
@@ -500,12 +501,67 @@ def startApplicationFrame():
     tk.Button(guiFrame, text = 'limpiar', command = lambda : e5.delete(0, tk.END), width = 7, padx = 2, pady = 2).grid(row = 7, column = 1, columnspan = 3)
     
     guiFrame.mainloop()
-
+    
+"""
+Definición de la ventana del cuento, se llama a este método cuando
+queremos arrancar esta vista
+"""
+def startTaleFrame():
+    
+    max_len_tale = 400
+    
+    def get_random_word():
+        
+        index = randint(0, len(words_pair) - 1)
+        return [key for (i, key) in enumerate(words_pair) if i == index][0]
+    
+    def bigram_word_max_prob(last_word):
+        max_prob_word = ''
+        max_prob = 0
+      
+        if last_word not in words_pair:
+            return get_random_word()
+      
+        for key in words_pair[last_word]:
+        
+            if words_pair[last_word][key][0] > max_prob:
+                max_prob = words_pair[last_word][key][0]
+                max_prob_word = key
+          
+        if max_prob_word == '':
+            return get_random_word()
+      
+        return max_prob_word.strip()
+        
+      
+    def bigram_words_tale():
+        
+      e1.delete(1.0, tk.END)
+      last_word = get_random_word()
+      text =  last_word + ' '
+      
+      while len(text) <= max_len_tale:
+          
+          last_word = bigram_word_max_prob(last_word)
+          text += last_word + ' '
+      
+      e1.insert(tk.INSERT, text)
+    
+    taleFrame = tk.Tk()
+    taleFrame.title('N-grams - Texto Predictivo (Cuento)')
+    taleFrame.minsize(width = 660, height = 220)
+    
+    e1 = tk.Text(taleFrame)
+    e1.grid(row = 0, column = 0, columnspan = 2, padx = 5, pady = 5)
+    
+    tk.Button(taleFrame, text='Cuéntame un cuento (Bigram)', command = bigram_words_tale, width = 30, padx = 2, pady = 2).grid(row = 1, column = 0, columnspan = 2, pady = 5, padx = 5)
+    
+    taleFrame.mainloop()
 
 root = tk.Tk()
 root.title('N-grams - Texto Predictivo (Menú)')
 root.minsize(width = 410, height = 50)
 tk.Button(root, text = 'Testing', command = lambda : startTestingFrame(), width = 15, padx = 2, pady = 2).grid(row = 0, column = 0, padx = 10, pady = 10)
 tk.Button(root, text = 'Aplicación', command = lambda : startApplicationFrame(), width = 15, padx = 2, pady = 2).grid(row = 0, column = 1, padx = 10, pady = 10)
-tk.Button(root, text = 'Cuento', command = lambda : startApplicationFrame(), width = 15, padx = 2, pady = 2).grid(row = 0, column = 2, padx = 10, pady = 10)
+tk.Button(root, text = 'Cuento', command = lambda : startTaleFrame(), width = 15, padx = 2, pady = 2).grid(row = 0, column = 2, padx = 10, pady = 10)
 root.mainloop()
