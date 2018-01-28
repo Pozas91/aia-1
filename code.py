@@ -155,7 +155,7 @@ def similar_word(word):
 def unigram_letras(texto):
     res = ''
     
-    for num in texto.split(' '):
+    for num in list(texto):
         
         max_prob = 0
         letter_max_prob = ''
@@ -232,11 +232,11 @@ def bigram_words_base(last_word, current_word):
 Método de invocación inicial del método bigram_words, usado para predeccir
 la primera palabra, ya que esta no tiene una referencia anterior.
 """
-def bigram_words(texto):
+def bigram_words(code):
   res = ''
   last_word = ''
   
-  for index, numBlock in enumerate(texto.split(' ')):
+  for index, numBlock in enumerate(code.split(' ')):
     if index == 0:
       word = unigram_palabras(numBlock)
       res += word
@@ -251,6 +251,9 @@ def bigram_words(texto):
 
   # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
   return res.strip()
+
+def bigram_letters(code):
+  return ''
 
 # TESTING  
 print("************************** TESTING ******************************")
@@ -278,10 +281,10 @@ def show_unigram_palabras():
     e3.delete(0, END)
     e2.delete(0, END)
     
-    e2.insert(10, encoding(e1.get()))
+    e2.insert(0, encoding(e1.get()))
     res = unigram_palabras(e2.get())
     #print("Entrada: %s\n" % res)
-    e3.insert(10, res)
+    e3.insert(0, res)
     
 def show_bigram_words():
   
@@ -291,37 +294,100 @@ def show_bigram_words():
   e2.insert(10, encoding(e1.get()))
   res = bigram_words(e2.get())
   #print("Entrada: %s\n" % res)
-  e3.insert(10, res)
+  e3.insert(0, res)
   
 def show_bigram_letters():
-  e3.insert(10, 'Yo me llamo Ralph')
+  e3.insert(0, 'Yo me llamo Ralph')
 
 master = Tk()
-master.title("Texto predictivo")
-master.minsize(width = 350, height = 150)
+master.title("N-grams - Texto Predictivo (Testing)")
+master.minsize(width = 465, height = 140)
 
-Label(master, text="Text").grid(row = 0)
+Label(master, text="Texto").grid(row = 0)
 Label(master, text="Entrada").grid(row = 1)
 Label(master, text="Predicción").grid(row = 3)
 
-e1 = Entry(master)
-e2 = Entry(master)
-e3 = Entry(master)
+e1 = Entry(master, width = 35)
+e2 = Entry(master, width = 35)
+e3 = Entry(master, width = 35)
 
-e1.insert(10, "soy bueno") 
-e2.insert(10, "658 17255") #El bloque de números equivale a "Soy bueno"
-e3.insert(10, "")
+e1.insert(0, "soy bueno")
 
 e1.grid(row = 0, column = 1)
 e2.grid(row = 1, column = 1)
 e3.grid(row = 3, column = 1)
 
-Button(master, text='Unigram letras', command = show_unigram_letras).grid(row = 6, column = 0, sticky = W, pady = 10)
-Button(master, text='Unigram palabras', command = show_unigram_palabras).grid(row = 6, column = 1, sticky = W, pady = 10)  
-Button(master, text='Bigram letras', command = show_bigram_letters).grid(row = 7, column = 0, sticky = W, pady = 10)  
-Button(master, text='Bigram palabras', command = show_bigram_words).grid(row = 7, column = 1, sticky = W, pady = 10)  
+Button(master, text='Unigram letras', command = lambda : show_unigram_letras, width = 30, padx = 2, pady = 2).grid(row = 6, column = 0, sticky = W, pady = 5, padx = 5)
+Button(master, text='Unigram palabras', command = lambda : show_unigram_palabras, width = 30, padx = 2, pady = 2).grid(row = 6, column = 1, sticky = W, pady = 5, padx = 5)  
+Button(master, text='Bigram letras', command = lambda : show_bigram_letters, width = 30, padx = 2, pady = 2).grid(row = 7, column = 0, sticky = W, pady = 5, padx = 5)
+Button(master, text='Bigram palabras', command = lambda : show_bigram_words, width = 30, padx = 2, pady = 2).grid(row = 7, column = 1, sticky = W, pady = 5, padx = 5)
 
-master.mainloop()
+def button_pressed(code):
+  
+  previous = e5.get()
+  code = previous + code
+  
+  e5.delete(0, END)
+  e5.insert(0, code)
+  
+  update_unigram_letters_input(code)
+  update_unigram_words_input(code)
+  update_bigram_letters_input(code)
+  update_bigram_words_input(code)
+  
+def update_unigram_letters_input(code):
+  e1.delete(0, END)
+  e1.insert(0, unigram_letras(code))
+  
+def update_unigram_words_input(code):
+  e2.delete(0, END)
+  e2.insert(0, unigram_palabras(code))
+  
+def update_bigram_letters_input(code):
+  e3.delete(0, END)
+  e3.insert(0, bigram_letters(code))
+  
+def update_bigram_words_input(code):
+  e4.delete(0, END)
+  e4.insert(0, bigram_words(code))
+
+gui = Tk()
+gui.title('N-grams - Texto Predictivo (Aplicación)')
+gui.minsize(width = 535, height = 220)
+
+Label(gui, text = "Unigram letras", padx = 2, pady = 2).grid(row = 0, column = 0, padx = 10)
+e1 = Entry(gui, width = 50)
+e1.grid(row = 1, column = 0, padx = 10)
+
+Label(gui, text = "Unigram palabras", padx = 2, pady = 2).grid(row = 2, column = 0, padx = 10)
+e2 = Entry(gui, width = 50)
+e2.grid(row = 3, column = 0, padx = 10)
+
+Label(gui, text = "Bigram letras", padx = 2, pady = 2).grid(row = 4, column = 0, padx = 10)
+e3 = Entry(gui, width = 50)
+e3.grid(row = 5, column = 0, padx = 10)
+
+Label(gui, text = "Bigram palabras", padx = 2, pady = 2).grid(row = 6, column = 0, padx = 10)
+e4 = Entry(gui, width = 50)
+e4.grid(row = 7, column = 0, padx = 10)
+
+Button(gui, text = 'a b c', command = lambda : button_pressed('1'), width = 7, padx = 2, pady = 2).grid(row = 1, column = 1)
+Button(gui, text = 'd e f', command = lambda : button_pressed('2'), width = 7, padx = 2, pady = 2).grid(row = 1, column = 2)
+Button(gui, text = 'g h i', command = lambda : button_pressed('3'), width = 7, padx = 2, pady = 2).grid(row = 1, column = 3)
+Button(gui, text = 'j k l', command = lambda : button_pressed('4'), width = 7, padx = 2, pady = 2).grid(row = 2, column = 1)
+Button(gui, text = 'espacio', command = lambda : button_pressed(' '), width = 7, padx = 2, pady = 2).grid(row = 2, column = 2)
+Button(gui, text = 'm n ñ o', command = lambda : button_pressed('5'), width = 7, padx = 2, pady = 2).grid(row = 2, column = 3)
+Button(gui, text = 'p q r s', command = lambda : button_pressed('6'), width = 7, padx = 2, pady = 2).grid(row = 3, column = 1)
+Button(gui, text = 't u v', command = lambda : button_pressed('7'), width = 7, padx = 2, pady = 2).grid(row = 3, column = 2)
+Button(gui, text = 'w x y z', command = lambda : button_pressed('8'), width = 7, padx = 2, pady = 2).grid(row = 3, column = 3)
+
+Label(gui, text = "Entrada", width = 21, padx = 2, pady = 2).grid(row = 5, column = 1, columnspan = 3)
+e5 = Entry(gui, width = 33)
+e5.grid(row = 6, column = 1, columnspan = 3)
+
+Button(gui, text = 'limpiar', command = lambda : e5.delete(0, END), width = 7, padx = 2, pady = 2).grid(row = 7, column = 1, columnspan = 3)
+
+mainloop()
 
     
     
