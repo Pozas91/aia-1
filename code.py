@@ -8,7 +8,6 @@ import sys
 import textwrap
 
 from random import randint
-from tkinter import *
 from collections import Counter
 
 # Variables globales
@@ -125,6 +124,7 @@ apply_statistics(letters, total_letters)
 En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
 Además, sacamos todas las palabras y letras del corpus y realizamos el conteo de las mismas para obtener así el bigram.
 """
+
 with open(path, "r", encoding="utf8") as file2:
     
     corpus = ''
@@ -154,9 +154,21 @@ with open(path, "r", encoding="utf8") as file2:
     bigrams_letters = [b for l in line_letters_list for b in zip(l.split("\n")[:-1], l.split("\n")[1:])]
     letters_pair = Counter(bigrams_letters)
     
-    # Total de par de palabras/letras existentes
-    total_words_pair = len(words_pair)
-    total_letters_pair = len(letters_pair)
+    # Contador de palabras y letras totales para estudiar la probabilidad
+    total_words_pair = dict()
+    total_letters_pair = dict()
+    
+    for key in words_pair:        
+        if key[0] in total_words_pair:
+            total_words_pair[key[0]] += words_pair[key]
+        else:
+            total_words_pair[key[0]] = words_pair[key]
+    
+    for key in letters_pair:
+        if key[0] in total_letters_pair:
+            total_letters_pair[key[0]] += letters_pair[key]
+        else:
+            total_letters_pair[key[0]] = letters_pair[key]
     
     # Nuevo diccionario para limpiar el proceso de salida (palabras/letras)
     clean_dictionary = dict()
@@ -168,8 +180,7 @@ with open(path, "r", encoding="utf8") as file2:
         if k[0] not in clean_dictionary:
             clean_dictionary[k[0]] = dict()
           
-        clean_dictionary[k[0]][k[1]] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
-        # words_pair[k] = [words_pair[k] / total_words_pair, encoding(k[0]), encoding(k[1])]
+        clean_dictionary[k[0]][k[1]] = [words_pair[k] / total_words_pair[k[0]], encoding(k[0]), encoding(k[1])]
         
     # Añado la probabilidad correspondiente a cada par de letras
     for k in letters_pair:
@@ -177,7 +188,7 @@ with open(path, "r", encoding="utf8") as file2:
         if k[0] not in clean_dictionary_letters:
             clean_dictionary_letters[k[0]] = dict()
           
-        clean_dictionary_letters[k[0]][k[1]] = [letters_pair[k] / total_letters_pair, encoding(k[0]), encoding(k[1])]
+        clean_dictionary_letters[k[0]][k[1]] = [letters_pair[k] / total_letters_pair[k[0]], encoding(k[0]), encoding(k[1])]
         
     #Actualizo las variables correspondientes a los diccionarios de letras y palabras después de la limpieza
     words_pair = clean_dictionary
@@ -200,13 +211,13 @@ def similar_word(word):
     return res
 
 """
-Método unigram_letras usado para proporcionar predicciones de letras 
+Método unigram_letters usado para proporcionar predicciones de letras 
 en base a una cadena de números separados por espacio
 """
-def unigram_letras(texto):
+def unigram_letters(code):
     res = ''
     
-    for num in list(texto):
+    for num in list(code):
         
         max_prob = 0
         letter_max_prob = ''
@@ -229,13 +240,13 @@ def unigram_letras(texto):
     return res.strip()
 
 """
-Método unigram_palabras usado para proporcionar predicciones de palabras 
+Método unigram_words usado para proporcionar predicciones de palabras 
 en base a una cadena de números separados por espacio
 """
-def unigram_palabras(texto):
+def unigram_words(code):
     res = ''
     
-    for numBlock in texto.split(' '):
+    for numBlock in code.split(' '):
         
         max_prob = 0
         word_max_prob = ''
@@ -294,7 +305,7 @@ def bigram_words(code):
     for index, numBlock in enumerate(code.split(' ')):
         
       if index == 0:
-        word = unigram_palabras(numBlock)
+        word = unigram_words(numBlock)
         res += word
         last_word = word
       else:
@@ -340,7 +351,7 @@ def bigram_letters(code):
   
     for index, numBlock in enumerate(code):
         if index == 0:
-            letter = unigram_letras(numBlock)
+            letter = unigram_letters(numBlock)
             res += letter
             last_letter = letter
         else:
@@ -354,10 +365,10 @@ def bigram_letters(code):
 
 # TESTING  
 print("************************** TESTING ******************************")
-print("Texto: Hola -> Predicción: " + unigram_letras('3 5 4 1'));
-print("Texto: Hola -> Predicción: " + unigram_palabras('3541'));
-print("Texto: Hola que tal estas -> Predicción: " + unigram_palabras('3541 672 714 26716'));
-print("Texto: Tengo mucho miedo -> Predicción: " + unigram_palabras('72535 57135 53225'));
+print("Texto: Hola -> Predicción: " + unigram_letters('3 5 4 1'));
+print("Texto: Hola -> Predicción: " + unigram_words('3541'));
+print("Texto: Hola que tal estas -> Predicción: " + unigram_words('3541 672 714 26716'));
+print("Texto: Tengo mucho miedo -> Predicción: " + unigram_words('72535 57135 53225'));
 
 # Tiempo de ejecución obtenido
 print("Tiempo de ejecución en segundos: --- %s seconds ---" % (time.time() - start_time))
@@ -368,22 +379,22 @@ queremos arrancar esta vista
 """
 def startTestingFrame():
     
-    def show_unigram_letras():
+    def show_unigram_letters():
       
         e3.delete(0, tk.END)
         e2.delete(0, tk.END)
         
         e2.insert(10, encoding(e1.get()))
-        res = unigram_letras(e2.get())
+        res = unigram_letters(e2.get())
         e3.insert(10, res)
        
-    def show_unigram_palabras():
+    def show_unigram_words():
       
         e3.delete(0, tk.END)
         e2.delete(0, tk.END)
         
         e2.insert(0, encoding(e1.get()))
-        res = unigram_palabras(e2.get())
+        res = unigram_words(e2.get())
         e3.insert(0, res)
         
     def show_bigram_words():
@@ -408,9 +419,9 @@ def startTestingFrame():
     testingFrame.title("N-grams - Texto Predictivo (Testing)")
     testingFrame.minsize(width = 465, height = 140)
     
-    tk.Label(testingFrame, text="Texto").grid(row = 0)
-    tk.Label(testingFrame, text="Entrada").grid(row = 1)
-    tk.Label(testingFrame, text="Predicción").grid(row = 3)
+    tk.Label(testingFrame, text = "Texto").grid(row = 0)
+    tk.Label(testingFrame, text = "Entrada").grid(row = 1)
+    tk.Label(testingFrame, text = "Predicción").grid(row = 3)
     
     e1 = tk.Entry(testingFrame, width = 35)
     e2 = tk.Entry(testingFrame, width = 35)
@@ -422,8 +433,8 @@ def startTestingFrame():
     e2.grid(row = 1, column = 1)
     e3.grid(row = 3, column = 1)
     
-    tk.Button(testingFrame, text='Unigram letras', command = show_unigram_letras, width = 30, padx = 2, pady = 2).grid(row = 6, column = 0, sticky = tk.W, pady = 5, padx = 5)
-    tk.Button(testingFrame, text='Unigram palabras', command = show_unigram_palabras, width = 30, padx = 2, pady = 2).grid(row = 6, column = 1, sticky = tk.W, pady = 5, padx = 5)  
+    tk.Button(testingFrame, text='Unigram letras', command = show_unigram_letters, width = 30, padx = 2, pady = 2).grid(row = 6, column = 0, sticky = tk.W, pady = 5, padx = 5)
+    tk.Button(testingFrame, text='Unigram palabras', command = show_unigram_words, width = 30, padx = 2, pady = 2).grid(row = 6, column = 1, sticky = tk.W, pady = 5, padx = 5)  
     tk.Button(testingFrame, text='Bigram letras', command = show_bigram_letters, width = 30, padx = 2, pady = 2).grid(row = 7, column = 0, sticky = tk.W, pady = 5, padx = 5)
     tk.Button(testingFrame, text='Bigram palabras', command = show_bigram_words, width = 30, padx = 2, pady = 2).grid(row = 7, column = 1, sticky = tk.W, pady = 5, padx = 5)
     
@@ -450,11 +461,11 @@ def startApplicationFrame():
       
     def update_unigram_letters_input(code):
       e1.delete(0, tk.END)
-      e1.insert(0, unigram_letras(code))
+      e1.insert(0, unigram_letters(code))
       
     def update_unigram_words_input(code):
       e2.delete(0, tk.END)
-      e2.insert(0, unigram_palabras(code))
+      e2.insert(0, unigram_words(code))
       
     def update_bigram_letters_input(code):
       e3.delete(0, tk.END)
