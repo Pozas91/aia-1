@@ -71,19 +71,20 @@ def hamming_distance(a, b):
     return distance
 
 """
-Método utilizado para aplicar estadística a los distintos items, es decir,
-este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
-"""
-def apply_statistics(items, total):
-    for item in items:
-        items[item][0] = items[item][0] / total_words
-
-"""
 Método utilizado para dividir el texto en n letras separadas.
 Ejemplo: hola -> h o l a
 """    
 def wrap(s, w):
     return textwrap.fill(s, w)
+
+"""
+Método utilizado para aplicar estadística a los distintos items, es decir,
+este método nos calcula la probabilidad de las palabras/letras en base al total de ellas.
+"""
+def apply_statistics(items, total):
+    for a in items:
+        for b in items[a]:
+            items[a][b] = items[a][b] / total
 
 """
 En esta sección abrimos el fichero como lectura y con codificación utf8 para así tratar tildes, etc.
@@ -97,23 +98,35 @@ with open(path, "r", encoding="utf8") as file:
         line = re.sub('[\s]+', ' ', line)
           
         for word in map(lambda x: x.strip().lower(), line.split(' ')):
-              
-            if word in words:
-                words[word][0] += 1
+            
+            encoding_word = encoding(word)
+            
+            if encoding_word in words:
+                if word in words[encoding_word]:
+                    words[encoding_word][word] += 1
+                else:
+                    words[encoding_word].update({word: 1})
             else:
-                words[word] = [1, encoding(word)]
+                words[encoding_word] = dict()
+                words[encoding_word].update({word:  1})
           
             total_words += 1
           
             for letter in list(word):
-          
-                if letter in letters:
-                    letters[letter][0] += 1
+                
+                encoding_letter = encoding(letter)
+                
+                if encoding_letter in letters:
+                    if letter in letters[encoding_letter]:
+                        letters[encoding_letter][letter] += 1
+                    else:
+                        letters[encoding_letter].update({letter: 1})
                 else:
-                    letters[letter] = [1, encoding(letter)]
+                    letters[encoding_letter] = dict()
+                    letters[encoding_letter].update({letter: 1})
               
                 total_letters += 1
-        
+                
 """
 Método que aplica estadística a todos los items
 """
@@ -158,6 +171,10 @@ with open(path, "r", encoding="utf8") as file2:
     total_words_pair = dict()
     total_letters_pair = dict()
     
+    """
+    Obtenemos los totales de las palabras y letras encontradas para realizar
+    la estadística condicionada
+    """
     for key in words_pair:        
         if key[0] in total_words_pair:
             total_words_pair[key[0]] += words_pair[key]
@@ -171,41 +188,59 @@ with open(path, "r", encoding="utf8") as file2:
             total_letters_pair[key[0]] = letters_pair[key]
     
     # Nuevo diccionario para limpiar el proceso de salida (palabras/letras)
-    clean_dictionary = dict()
+    clean_dictionary_words = dict()
     clean_dictionary_letters = dict()
     
     # Añado la probabilidad correspondiente a cada par de palabras
     for k in words_pair:
       
-        if k[0] not in clean_dictionary:
-            clean_dictionary[k[0]] = dict()
-          
-        clean_dictionary[k[0]][k[1]] = [words_pair[k] / total_words_pair[k[0]], encoding(k[0]), encoding(k[1])]
+        if k[0] not in clean_dictionary_words:
+            clean_dictionary_words[k[0]] = dict()
+        
+        encoding_word = encoding(k[1])
+        
+        if encoding_word not in clean_dictionary_words[k[0]]:
+            clean_dictionary_words[k[0]][encoding_word] = dict()
+        
+        clean_dictionary_words[k[0]][encoding_word].update({
+            k[1]: words_pair[k] / total_words_pair[k[0]]
+        })
         
     # Añado la probabilidad correspondiente a cada par de letras
     for k in letters_pair:
-      
+        
         if k[0] not in clean_dictionary_letters:
             clean_dictionary_letters[k[0]] = dict()
-          
-        clean_dictionary_letters[k[0]][k[1]] = [letters_pair[k] / total_letters_pair[k[0]], encoding(k[0]), encoding(k[1])]
+        
+        encoding_letter = encoding(k[1])
+        
+        if encoding_letter not in clean_dictionary_letters[k[0]]:
+            clean_dictionary_letters[k[0]][encoding_letter] = dict()
+        
+        clean_dictionary_letters[k[0]][encoding_letter].update({
+            k[1]: letters_pair[k] / total_letters_pair[k[0]]
+        })
         
     #Actualizo las variables correspondientes a los diccionarios de letras y palabras después de la limpieza
-    words_pair = clean_dictionary
+    words_pair = clean_dictionary_words
     letters_pair = clean_dictionary_letters
 
 """      
 Método para obtener una palabra similar a una dada, en caso de que no se
 en el diccionario
 """
-def similar_word(word):
+def similar_word(code):
+    
     res = ''
     min_distance = sys.maxsize
   
-    for key, value in words.items():
-        distance = hamming_distance(word, value[1])
+    for key, values in words.items():
+        
+        distance = hamming_distance(code, key)
+        
         if distance < min_distance:
-            res = key
+            # Cogemos la primera palabra que haya
+            res = next(iter(words[key]))
             min_distance = distance
   
     return res
@@ -215,6 +250,7 @@ Método unigram_letters usado para proporcionar predicciones de letras
 en base a una cadena de números separados por espacio
 """
 def unigram_letters(code):
+    
     res = ''
     
     for num in list(code):
@@ -222,19 +258,22 @@ def unigram_letters(code):
         max_prob = 0
         letter_max_prob = ''
         
-        for key, value in letters.items():
+        if num in letters:
             
-            """
-            Compruebo si el número que estamos recorriendo es igual al encontrado en el diccionario
-            de ser así entonces compruebo también que la probabilidad sea más alta que la anterior.
-            Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
-            """
-            if value[1] == num and value[0] > max_prob:
-                max_prob = value[0]
-                letter_max_prob = key
-
-        # Almaceno la letra más probable en la variable res
-        res += letter_max_prob + ' '
+            for key in letters[num]:
+                
+                prob = letters[num][key]
+                
+                """
+                Compruebo que la probabilidad sea más alta que la anterior.
+                Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
+                """
+                if prob > max_prob:
+                    max_prob = prob
+                    letter_max_prob = key
+            
+            # Almaceno la letra más probable en la variable res
+            res += letter_max_prob + ' '
     
     # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
     return res.strip()
@@ -244,29 +283,34 @@ Método unigram_words usado para proporcionar predicciones de palabras
 en base a una cadena de números separados por espacio
 """
 def unigram_words(code):
+    
     res = ''
     
-    for numBlock in code.split(' '):
+    for num in code.split(' '):
         
         max_prob = 0
         word_max_prob = ''
         
-        for key, value in words.items():
-            """
-            Compruebo si el número que estamos recorriendo es igual al encontrado en el diccionario
-            de ser así entonces compruebo también que la probabilidad sea más alta que la anterior.
-            Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
-            """
-            if value[1] == numBlock and value[0] > max_prob:
-                max_prob = value[0]
-                word_max_prob = key
-
+        if num in words:
+        
+            for key in words[num]:
+                
+                prob = words[num][key]
+                
+                """
+                Compruebo que la probabilidad sea más alta que la anterior.
+                Sí es más alta obtengo su probabilidad y la palabra a la que se corresponde.
+                """
+                if prob > max_prob:
+                    max_prob = prob
+                    word_max_prob = key
+                
         if word_max_prob == '':
-          res += similar_word(numBlock) + ' '
+            res += similar_word(num) + ' '
         else:
-          # Almaceno la letra más probable en la variable res
-          res += word_max_prob + ' '
-    
+            # Almaceno la letra más probable en la variable res
+            res += word_max_prob + ' '
+            
     # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
     return res.strip()
 
@@ -275,21 +319,35 @@ Método bigram_words_base usado para proporcionar predicciones de palabras
 en base a una cadena de números separadas por espacio teniendo en cuenta la
 palabra anteriormente predicha.
 """
-def bigram_words_base(last_word, current_word):
+def bigram_words_base(last_word, code):
+    
     max_prob_word = ''
     max_prob = 0
   
-    if last_word not in words_pair:
-        return similar_word(current_word)
-  
-    for key in words_pair[last_word]:
-    
-        if words_pair[last_word][key][2] == current_word and words_pair[last_word][key][0] > max_prob:
-            max_prob = words_pair[last_word][key][0]
-            max_prob_word = key
+    if last_word in words_pair:
+        
+        if code in words_pair[last_word]:
+            
+            for key in words_pair[last_word][code]:
+            
+                prob = words_pair[last_word][code][key]
+            
+                """
+                Compruebo que la probabilidad sea más alta que la anterior.
+                Sí es más alta obtengo su probabilidad y la palabra a la que se corresponde.
+                """
+                if prob > max_prob:
+                    max_prob = prob
+                    max_prob_word = key
+            
+        else:
+            return similar_word(code)
+
+    else:
+        return similar_word(code)
       
     if max_prob_word == '':
-        max_prob_word = similar_word(current_word)
+        max_prob_word = similar_word(code)
   
     # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
     return max_prob_word.strip()
@@ -299,6 +357,7 @@ Método de invocación inicial del método bigram_words, usado para predeccir
 la primera palabra, ya que esta no tiene una referencia anterior.
 """
 def bigram_words(code):
+    
     res = ''
     last_word = ''
   
@@ -322,21 +381,35 @@ def bigram_words(code):
 Método bigram_letters_base usado para proporcionar predcciones de letras
 en base a un número teniendo en cuenta la letra anteriormente predicha.
 """
-def bigram_letters_base(last_letter, current_letter_code):
+def bigram_letters_base(last_letter, code):
+    
     max_prob_letter = ''
     max_prob = 0
   
-    if last_letter not in letters_pair:
-        return similar_word(current_letter_code)
-  
-    for key in letters_pair[last_letter]:
-    
-        if letters_pair[last_letter][key][2] == current_letter_code and letters_pair[last_letter][key][0] > max_prob:
-            max_prob = letters_pair[last_letter][key][0]
-            max_prob_letter = key
+    if last_letter in letters_pair:
+        
+        if code in letters_pair[last_letter]:
+            
+            for key in letters_pair[last_letter][code]:
+            
+                prob = letters_pair[last_letter][code][key]
+            
+                """
+                Compruebo que la probabilidad sea más alta que la anterior.
+                Sí es más alta obtengo su probabilidad y la letra a la que se corresponde.
+                """
+                if prob > max_prob:
+                    max_prob = prob
+                    max_prob_letter = key
+            
+        else:
+            return similar_word(code)
+
+    else:
+        return similar_word(code)
       
     if max_prob_letter == '':
-        max_prob_letter = similar_word(current_letter_code)
+        max_prob_letter = similar_word(code)
   
     # Devolvemos el valor encontrado limpiando los espacios iniciales y finales
     return max_prob_letter.strip()
@@ -346,6 +419,7 @@ Método de invocación inicial del método bigram_letters, usado para predeccir
 la primera letra, ya que esta no tiene una referencia anterior.
 """
 def bigram_letters(code):
+    
     res = ''
     last_letter = ''
   
