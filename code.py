@@ -6,8 +6,7 @@ import time
 import tkinter as tk
 import sys
 import textwrap
-
-from random import randint
+import random
 from collections import Counter
 
 # Variables globales
@@ -597,21 +596,30 @@ def startTaleFrame():
     
     def get_random_word():
         
-        index = randint(0, len(words_pair) - 1)
+        index = random.randint(0, len(words_pair) - 1)
         return [key for (i, key) in enumerate(words_pair) if i == index][0]
     
     def bigram_word_max_prob(last_word):
-        max_prob_word = ''
-        max_prob = 0
-      
+              
         if last_word not in words_pair:
             return get_random_word()
-      
-        for key in words_pair[last_word]:
         
-            if words_pair[last_word][key][0] > max_prob:
-                max_prob = words_pair[last_word][key][0]
-                max_prob_word = key
+        max_prob_word = ''
+        roulette = random.uniform(0, 1)
+        count = 0
+      
+        for code in words_pair[last_word]:
+            
+            for word in words_pair[last_word][code]:
+                
+                count += words_pair[last_word][code][word]
+                
+                if count >= roulette:
+                    max_prob_word = word
+                    break
+                
+            if max_prob_word != '':
+                break
           
         if max_prob_word == '':
             return get_random_word()
