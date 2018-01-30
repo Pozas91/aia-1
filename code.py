@@ -56,7 +56,7 @@ Método utilizado para calcular la distancia entre dos palabras codificadas.
 es utilizado para dar una palabra favorable en caso de no encontrar la
 original en el diccionario.
 """
-def manhattan_distance(a, b):
+def hamming_distance(a, b):
     distance = 0
   
     if len(a) > len(b):
@@ -203,7 +203,7 @@ def similar_word(word):
     min_distance = sys.maxsize
   
     for key, value in words.items():
-        distance = manhattan_distance(word, value[1])
+        distance = hamming_distance(word, value[1])
         if distance < min_distance:
             res = key
             min_distance = distance
