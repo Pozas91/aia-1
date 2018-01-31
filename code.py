@@ -52,7 +52,7 @@ def encoding(word):
 
 """
 Método utilizado para calcular la distancia entre dos palabras codificadas.
-es utilizado para dar una palabra favorable en caso de no encontrar la
+Es utilizado para dar una palabra favorable en caso de no encontrar la
 original en el diccionario.
 """
 def hamming_distance(a, b):
@@ -68,6 +68,27 @@ def hamming_distance(a, b):
     distance += (len(b) - len(a))
       
     return distance
+
+"""
+Método utilizado para calcular la distancia entre dos palabras codificadas.
+Es utilizado para dar una palabra favorable en caso de no encotrar la original
+en el diccionario. Esta implementación ha sido sacada de la Wikipedia
+"""
+def levenshtein_distance(a, b):
+  d = dict()
+  
+  for i in range(len(a) + 1):
+     d[i] = dict()
+     d[i][0] = i
+     
+  for i in range(len(b) + 1):
+     d[0][i] = i
+     
+  for i in range(1, len(a) + 1):
+     for j in range(1, len(b) + 1):
+        d[i][j] = min(d[i][j - 1] + 1, d[i - 1][j] + 1, d[i - 1][j - 1] + (not a[i - 1] == b[j - 1]))
+        
+  return d[len(a)][len(b)]
 
 """
 Método utilizado para dividir el texto en n letras separadas.
@@ -235,7 +256,7 @@ def similar_word(code):
   
     for key, values in words.items():
         
-        distance = hamming_distance(code, key)
+        distance = levenshtein_distance(code, key)
         
         if distance < min_distance:
             # Cogemos la primera palabra que haya
