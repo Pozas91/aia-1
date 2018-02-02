@@ -629,6 +629,10 @@ def startTaleFrame():
         roulette = random.uniform(0, 1)
         count = 0
       
+        """
+        En esta parte del código se realiza una pequeña ruleta, obteniendo una palabra aleatoria
+        pero no de forma caótica, este ruleta le da más peso a la palabra con mayor probabilidad.
+        """
         for code in words_pair[last_word]:
             
             for word in words_pair[last_word][code]:
